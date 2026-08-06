@@ -1,0 +1,56 @@
+project_id = "your-project-id"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+enabled = true
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop_port = 54326
+
+[functions]
+enabled = true
+port = 54327
+
+[auth]
+enabled = true
+port = 54328
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://your-vercel-app.vercel.app"]
+jwt_expiry = 3600
+enable_signup = true
+enable_anonymous_sign_ins = false
+min_password_length = 8
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[auth.sms]
+enabled = false
+
+[auth.external]
+enabled = false
+
+[storage]
+enabled = true
+port = 54329
+file_size_limit = "50MiB"
+
+[realtime]
+enabled = true
+port = 54330
+ip_version = "ipv4"

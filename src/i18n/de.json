@@ -1,0 +1,107 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "retry": "Erneut versuchen",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "close": "Schließen",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "yes": "Ja",
+    "no": "Nein"
+  },
+  "ui": {
+    "start": "Starten",
+    "settings": "Einstellungen",
+    "profile": "Profil",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "username": "Benutzername",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen"
+  },
+  "game": {
+    "modes": {
+      "numbers": "Zahlen",
+      "words": "Wörter",
+      "mixed": "Gemischt"
+    },
+    "difficulty": {
+      "easy": "Leicht",
+      "medium": "Mittel",
+      "hard": "Schwer"
+    },
+    "feedback": {
+      "correct": "Richtig!",
+      "incorrect": "Falsch",
+      "correctAnswer": "Richtige Antwort:",
+      "tryAgain": "Versuche es erneut"
+    },
+    "stats": {
+      "score": "Punkte",
+      "streak": "Serie",
+      "accuracy": "Genauigkeit",
+      "questions": "Fragen",
+      "correct": "Richtig",
+      "responseTime": "Antwortzeit"
+    },
+    "setup": {
+      "selectMode": "Spielmodus wählen",
+      "selectDifficulty": "Schwierigkeit wählen",
+      "startGame": "Spiel starten"
+    }
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden",
+    "forgotPassword": "Passwort vergessen?",
+    "resetPassword": "Passwort zurücksetzen",
+    "emailSent": "E-Mail gesendet",
+    "checkEmail": "Bitte überprüfe deine E-Mails",
+    "invalidCredentials": "Ungültige Anmeldedaten",
+    "userExists": "Benutzer existiert bereits",
+    "weakPassword": "Passwort zu schwach"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "voice": "Stimme",
+    "speed": "Geschwindigkeit",
+    "autoPlay": "Audio automatisch abspielen",
+    "showTranslation": "Übersetzung anzeigen",
+    "theme": "Design",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System",
+    "account": "Konto",
+    "saved": "Gespeichert!"
+  },
+  "profile": {
+    "title": "Profil",
+    "stats": "Statistiken",
+    "totalGames": "Spiele insgesamt",
+    "totalScore": "Gesamtpunktzahl",
+    "bestStreak": "Beste Serie",
+    "accuracy": "Genauigkeit",
+    "avgResponse": "Ø Antwortzeit",
+    "vocabulary": "Wortschatz",
+    "wordsLearned": "Gelernt",
+    "wordsPracticing": "Im Training",
+    "mastered": "Beherrscht",
+    "history": "Spielverlauf",
+    "date": "Datum",
+    "mode": "Modus",
+    "difficulty": "Schwierigkeit",
+    "score": "Punkte",
+    "questions": "Fragen",
+    "correct": "Richtig",
+    "noHistory": "Noch keine Spiele gespielt"
+  }
+}

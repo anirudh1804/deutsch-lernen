@@ -1,0 +1,107 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "next": "Next",
+    "previous": "Previous",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "ui": {
+    "start": "Start",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password"
+  },
+  "game": {
+    "modes": {
+      "numbers": "Numbers",
+      "words": "Words",
+      "mixed": "Mixed"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "feedback": {
+      "correct": "Correct!",
+      "incorrect": "Incorrect",
+      "correctAnswer": "Correct Answer:",
+      "tryAgain": "Try Again"
+    },
+    "stats": {
+      "score": "Score",
+      "streak": "Streak",
+      "accuracy": "Accuracy",
+      "questions": "Questions",
+      "correct": "Correct",
+      "responseTime": "Response Time"
+    },
+    "setup": {
+      "selectMode": "Select Game Mode",
+      "selectDifficulty": "Select Difficulty",
+      "startGame": "Start Game"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "emailSent": "Email Sent",
+    "checkEmail": "Please check your email",
+    "invalidCredentials": "Invalid credentials",
+    "userExists": "User already exists",
+    "weakPassword": "Password too weak"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "voice": "Voice",
+    "speed": "Speed",
+    "autoPlay": "Auto-play audio",
+    "showTranslation": "Show translation",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "account": "Account",
+    "saved": "Saved!"
+  },
+  "profile": {
+    "title": "Profile",
+    "stats": "Statistics",
+    "totalGames": "Total Games",
+    "totalScore": "Total Score",
+    "bestStreak": "Best Streak",
+    "accuracy": "Accuracy",
+    "avgResponse": "Avg Response",
+    "vocabulary": "Vocabulary",
+    "wordsLearned": "Learned",
+    "wordsPracticing": "Practicing",
+    "mastered": "Mastered",
+    "history": "Game History",
+    "date": "Date",
+    "mode": "Mode",
+    "difficulty": "Difficulty",
+    "score": "Score",
+    "questions": "Questions",
+    "correct": "Correct",
+    "noHistory": "No games played yet"
+  }
+}
