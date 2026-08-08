@@ -20,7 +20,7 @@ export function Login() {
     de: {
       title: 'Anmelden',
       subtitle: 'Melde dich an, um deinen Fortschritt zu speichern',
-      email: 'E-Mail',
+      email: 'E-Mail oder Benutzername',
       password: 'Passwort',
       submit: 'Anmelden',
       noAccount: 'Noch kein Konto?',
@@ -30,7 +30,7 @@ export function Login() {
     en: {
       title: 'Login',
       subtitle: 'Sign in to save your progress',
-      email: 'Email',
+      email: 'Email or Username',
       password: 'Password',
       submit: 'Sign In',
       noAccount: "Don't have an account?",
@@ -45,10 +45,10 @@ export function Login() {
     setLoading(true);
 
     try {
-      await login({ email, password });
+      await login({ identifier: email, password });
       navigate(from, { replace: true });
     } catch (err) {
-      setError(settings.language === 'de' ? 'Anmeldung fehlgeschlagen' : 'Login failed');
+      setError((err as Error).message || (settings.language === 'de' ? 'Anmeldung fehlgeschlagen' : 'Login failed'));
     } finally {
       setLoading(false);
     }
@@ -77,12 +77,12 @@ export function Login() {
               <label htmlFor="email" className="label">{t.email}</label>
               <input
                 id="email"
-                type="email"
+                type="text"
                 className="input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
 

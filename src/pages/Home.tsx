@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 import { useGame } from '@/features/game';
@@ -7,6 +8,7 @@ export function Home() {
   const { user } = useAuth();
   const { startGame } = useGame();
   const { settings } = useSettings();
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
 
   const t = {
     de: {
@@ -36,7 +38,7 @@ export function Home() {
   }[settings.language];
 
   const handleStart = (mode: 'numbers' | 'words' | 'mixed') => {
-    startGame(mode, 'easy'); // Default difficulty, user can change in game setup
+    startGame(mode, difficulty);
   };
 
   return (
@@ -80,13 +82,14 @@ export function Home() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">{t.selectDifficulty}</h2>
         <div className="flex flex-wrap gap-3">
           {[
-            { value: 'easy', label: t.easy, color: 'green' },
-            { value: 'medium', label: t.medium, color: 'yellow' },
-            { value: 'hard', label: t.hard, color: 'red' },
-          ].map(({ value, label, color }) => (
+            { value: 'easy' as const, label: t.easy, active: 'bg-green-600 text-white', inactive: 'bg-green-100 text-green-800' },
+            { value: 'medium' as const, label: t.medium, active: 'bg-yellow-500 text-white', inactive: 'bg-yellow-100 text-yellow-800' },
+            { value: 'hard' as const, label: t.hard, active: 'bg-red-600 text-white', inactive: 'bg-red-100 text-red-800' },
+          ].map(({ value, label, active, inactive }) => (
             <button
               key={value}
-              className={`badge px-4 py-2 text-sm ${color}-100 ${color}-800`}
+              onClick={() => setDifficulty(value)}
+              className={`badge px-4 py-2 text-sm cursor-pointer transition-colors ${difficulty === value ? active : inactive}`}
             >
               {label}
             </button>

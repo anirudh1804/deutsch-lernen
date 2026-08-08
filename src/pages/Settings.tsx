@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { useSettings } from '@/features/settings';
 import { useAuth } from '@/features/auth';
 
 export function Settings() {
   const { settings, updateSettings } = useSettings();
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
+  const [username, setUsername] = useState(user?.username || '');
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const t = {
     de: {
@@ -19,6 +22,8 @@ export function Settings() {
       system: 'System',
       save: 'Speichern',
       saved: 'Gespeichert!',
+      usernamePlaceholder: 'Noch kein Benutzername festgelegt',
+      usernameTaken: 'Benutzername bereits vergeben',
       account: 'Konto',
       username: 'Benutzername',
       email: 'E-Mail',
@@ -36,11 +41,27 @@ export function Settings() {
       system: 'System',
       save: 'Save',
       saved: 'Saved!',
+      usernamePlaceholder: 'No username set yet',
+      usernameTaken: 'Username already taken',
       account: 'Account',
       username: 'Username',
       email: 'Email',
     },
   }[settings.language];
+
+  const handleSaveUsername = async () => {
+    const value = username.trim();
+    if (!value) return;
+    setUsernameStatus('saving');
+    try {
+      await updateProfile({ username: value });
+      setUsernameStatus('saved');
+      setTimeout(() => setUsernameStatus('idle'), 2000);
+    } catch {
+      setUsernameStatus('error');
+      setTimeout(() => setUsernameStatus('idle'), 2000);
+    }
+  };
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -51,12 +72,34 @@ export function Settings() {
         <div className="space-y-4">
           <div>
             <label className="label">{t.username}</label>
-            <input
-              type="text"
-              className="input"
-              value={user?.username || ''}
-              readOnly
-            />
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                className="input flex-1"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={t.usernamePlaceholder}
+                autoComplete="username"
+                minLength={3}
+                maxLength={20}
+              />
+              <button
+                type="button"
+                onClick={handleSaveUsername}
+                className="btn-primary shrink-0"
+                disabled={usernameStatus === 'saving' || username.trim().length < 3}
+              >
+                {usernameStatus === 'saving'
+                  ? (settings.language === 'de' ? 'Speichern...' : 'Saving...')
+                  : t.save}
+              </button>
+            </div>
+            {usernameStatus === 'saved' && (
+              <p className="text-sm text-green-600 mt-1">{t.saved}</p>
+            )}
+            {usernameStatus === 'error' && (
+              <p className="text-sm text-red-600 mt-1">{t.usernameTaken}</p>
+            )}
           </div>
           <div>
             <label className="label">{t.email}</label>

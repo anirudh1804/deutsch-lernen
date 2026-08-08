@@ -20,7 +20,7 @@ export interface AuthState {
 }
 
 export interface LoginCredentials {
-  email: string;
+  identifier: string; // email OR username
   password: string;
 }
 

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useGame } from '@/features/game';
 import { useSettings } from '@/features/settings';
+import { useTTS } from '@/features/tts';
 
 export function Game() {
   const { 
@@ -15,19 +16,19 @@ export function Game() {
     startGame,
   } = useGame();
   const { settings } = useSettings();
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [canReplay, setCanReplay] = useState(false);
+  const { speak, isSpeaking } = useTTS({ rate: settings.speed });
 
   useEffect(() => {
     if (currentQuestion && settings.autoPlayAudio !== false) {
-      const t = setTimeout(() => audioRef.current?.play(), 100);
-      return () => clearTimeout(t);
+      const t = setTimeout(() => speak(currentQuestion.spokenText), 100);
+      return () => {
+        clearTimeout(t);
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      };
     }
-  }, [currentQuestion?.id]);
-
-  useEffect(() => {
-    setCanReplay(false);
-  }, [currentQuestion?.id]);
+  }, [currentQuestion?.id, settings.autoPlayAudio]);
 
   const t = {
     de: {
@@ -139,25 +140,17 @@ export function Game() {
               </p>
 
               <div className="flex justify-center">
-                <audio
-                  ref={audioRef}
-                  className="hidden"
-                  src={currentQuestion.audioUrl}
-                  onPlay={() => setCanReplay(true)}
-                />
                 <button
                   type="button"
-                  onClick={() => audioRef.current?.play()}
+                  onClick={() => speak(currentQuestion.spokenText)}
                   className="btn-primary w-16 h-16 rounded-full text-2xl"
                   aria-label={settings.language === 'de' ? 'Abspielen' : 'Play'}
                 >
-                  ▶
+                  {isSpeaking ? '⏹' : '▶'}
                 </button>
               </div>
               <p className="text-xs text-gray-400 mt-3">
-                {canReplay
-                  ? (settings.language === 'de' ? 'Klicke zum erneuten Abspielen' : 'Click to replay')
-                  : (settings.language === 'de' ? 'Wird abgespielt...' : 'Playing...')}
+                {settings.language === 'de' ? 'Klicke zum Abspielen / Wiederholen' : 'Click to play / replay'}
               </p>
             </div>
 

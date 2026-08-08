@@ -64,7 +64,7 @@ export function Register() {
       await register({ email, password, username });
       navigate('/');
     } catch (err) {
-      setError(t.usernameTaken);
+      setError((err as Error).message || t.usernameTaken);
     } finally {
       setLoading(false);
     }
