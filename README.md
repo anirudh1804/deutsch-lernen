@@ -4,9 +4,9 @@ A web application for learning German numbers and vocabulary through interactive
 
 ## Features
 
-- **Number Practice**: Generate random numbers (0–2,000,000) with up to 2 decimal places, spoken as full German words
-  - Example: `1234.56` → "eintausendzweihundertvierunddreißig Komma sechsundfünfzig"
-- **Vocabulary Practice**: Learn German words by difficulty level (easy/medium/hard)
+- **Number Practice**: Generate random numbers (0–2,000,000) with up to 2 decimal places, spoken as full German words — the number is only heard, not shown; user types what they hear
+  - Example: audio plays "eintausendzweihundertvierunddreißig Komma sechsundfünfzig" → user types `1234.56`
+- **Vocabulary Practice**: Learn German words by difficulty level (easy/medium/hard) — the word is only heard, not shown; user types the German spelling
 - **Game Modes**: Numbers only, Words only, or Mixed
 - **Audio**: High-quality Google Cloud TTS with Web Speech API fallback
 - **Progress Tracking**: User accounts with Supabase (streaks, scores, history)

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '@/features/game';
 import { useSettings } from '@/features/settings';
 
@@ -14,6 +15,19 @@ export function Game() {
     startGame,
   } = useGame();
   const { settings } = useSettings();
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [canReplay, setCanReplay] = useState(false);
+
+  useEffect(() => {
+    if (currentQuestion && settings.autoPlayAudio !== false) {
+      const t = setTimeout(() => audioRef.current?.play(), 100);
+      return () => clearTimeout(t);
+    }
+  }, [currentQuestion?.id]);
+
+  useEffect(() => {
+    setCanReplay(false);
+  }, [currentQuestion?.id]);
 
   const t = {
     de: {
@@ -117,15 +131,34 @@ export function Game() {
                   ? (settings.language === 'de' ? 'Zahl' : 'Number') 
                   : (settings.language === 'de' ? 'Wort' : 'Word')}
               </span>
-              <p className="text-4xl md:text-5xl font-mono font-bold text-gray-900 mb-4">
-                {currentQuestion.value}
+
+              <p className="text-sm text-gray-500 mb-6">
+                {settings.language === 'de'
+                  ? 'Höre gut zu und tippe, was du hörst.'
+                  : 'Listen carefully and type what you hear.'}
               </p>
+
               <div className="flex justify-center">
-                <audio controls className="w-full max-w-xs">
-                  <source src={currentQuestion.audioUrl || ''} type="audio/mpeg" />
-                  Your browser does not support the audio element.
-                </audio>
+                <audio
+                  ref={audioRef}
+                  className="hidden"
+                  src={currentQuestion.audioUrl}
+                  onPlay={() => setCanReplay(true)}
+                />
+                <button
+                  type="button"
+                  onClick={() => audioRef.current?.play()}
+                  className="btn-primary w-16 h-16 rounded-full text-2xl"
+                  aria-label={settings.language === 'de' ? 'Abspielen' : 'Play'}
+                >
+                  ▶
+                </button>
               </div>
+              <p className="text-xs text-gray-400 mt-3">
+                {canReplay
+                  ? (settings.language === 'de' ? 'Klicke zum erneuten Abspielen' : 'Click to replay')
+                  : (settings.language === 'de' ? 'Wird abgespielt...' : 'Playing...')}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="max-w-md mx-auto">
