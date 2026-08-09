@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 
 interface UseTTSOptions {
   lang?: string;
@@ -14,21 +16,32 @@ export interface TTSVoice {
   default: boolean;
 }
 
+const isNative = Capacitor.isNativePlatform();
+
 /**
- * Hook wrapping the browser's Web Speech API (speechSynthesis).
- * Completely free — no external API or keys required.
+ * Hook wrapping text-to-speech.
+ * - On native (Capacitor) platforms it uses the device's built-in TTS engine
+ *   via @capacitor-community/text-to-speech (works in the Android WebView).
+ * - On web/desktop it falls back to the browser's Web Speech API.
  */
 export function useTTS({ lang = 'de-DE', rate = 1, voice }: UseTTSOptions = {}) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const [voices, setVoices] = useState<TTSVoice[]>([]);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const nativeVoiceRef = useRef<number | undefined>(undefined);
   const selectedRef = useRef(voice);
 
   selectedRef.current = voice;
 
-  const selectVoice = useCallback(
-    (all: SpeechSynthesisVoice[]) => {
+  // Load available German voices (web only; native voices are resolved on speak).
+  useEffect(() => {
+    if (isNative) {
+      setVoicesLoaded(true);
+      return;
+    }
+    const loadVoices = () => {
+      const all = window.speechSynthesis?.getVoices() || [];
       const german = all.filter(v => v.lang?.toLowerCase().startsWith('de'));
       const selected = selectedRef.current;
       const match =
@@ -38,16 +51,6 @@ export function useTTS({ lang = 'de-DE', rate = 1, voice }: UseTTSOptions = {}) 
         german.find(v => v.lang.toLowerCase().startsWith('de')) ||
         null;
       voiceRef.current = match;
-      return german;
-    },
-    []
-  );
-
-  // Cache the available German voices and honor the selected one.
-  useEffect(() => {
-    const loadVoices = () => {
-      const all = window.speechSynthesis?.getVoices() || [];
-      const german = selectVoice(all);
       setVoices(
         german.map(v => ({
           name: v.name,
@@ -64,11 +67,24 @@ export function useTTS({ lang = 'de-DE', rate = 1, voice }: UseTTSOptions = {}) 
     // Chrome loads voices asynchronously.
     window.speechSynthesis?.addEventListener('voiceschanged', loadVoices);
     return () => window.speechSynthesis?.removeEventListener('voiceschanged', loadVoices);
-  }, [selectVoice]);
+  }, []);
 
   const speak = useCallback(
     (text: string) => {
-      if (!text || !('speechSynthesis' in window)) return;
+      if (!text) return;
+
+      if (isNative) {
+        setIsSpeaking(true);
+        TextToSpeech.speak({
+          text,
+          lang,
+          rate,
+          voice: nativeVoiceRef.current,
+        }).finally(() => setIsSpeaking(false));
+        return;
+      }
+
+      if (!('speechSynthesis' in window)) return;
 
       window.speechSynthesis.cancel();
 
@@ -89,6 +105,11 @@ export function useTTS({ lang = 'de-DE', rate = 1, voice }: UseTTSOptions = {}) 
   );
 
   const stop = useCallback(() => {
+    if (isNative) {
+      TextToSpeech.stop();
+      setIsSpeaking(false);
+      return;
+    }
     window.speechSynthesis?.cancel();
     setIsSpeaking(false);
   }, []);

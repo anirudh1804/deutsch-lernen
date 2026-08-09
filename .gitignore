@@ -41,6 +41,10 @@ coverage/
 .supabase/
 supabase/.temp/
 
+# Android signing
+keystore/
+keystore.properties
+
 # Vercel
 .vercel
 

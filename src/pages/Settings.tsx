@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useSettings } from '@/features/settings';
 import { useAuth } from '@/features/auth';
 import { useTTS } from '@/features/tts';
+import { useUpdate } from '@/features/update';
 
 export function Settings() {
   const { settings, updateSettings } = useSettings();
   const { user, updateProfile } = useAuth();
   const { voices } = useTTS();
+  const update = useUpdate();
   const [username, setUsername] = useState(user?.username || '');
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
@@ -30,6 +32,19 @@ export function Settings() {
       username: 'Benutzername',
       email: 'E-Mail',
       autoVoice: 'Auto (System)',
+      update: 'Update',
+      updateTitle: 'App aktualisieren',
+      updateSubtitle: 'Prüfe, ob eine neuere Version verfügbar ist.',
+      currentVersion: 'Aktuelle Version',
+      checkUpdates: 'Nach Updates suchen',
+      checking: 'Suche nach Updates...',
+      upToDate: 'Du bist auf dem neuesten Stand.',
+      updateAvailable: 'Neue Version verfügbar:',
+      installUpdate: 'Jetzt aktualisieren',
+      updateReady: 'Aktualisierung wird angewendet...',
+      downloadInstallers: 'Neuere Version auf GitHub ansehen',
+      checkFailed: 'Update-Prüfung fehlgeschlagen.',
+      noApk: 'Für diese Version ist keine APK verfügbar.',
     },
     en: {
       title: 'Settings',
@@ -50,6 +65,19 @@ export function Settings() {
       username: 'Username',
       email: 'Email',
       autoVoice: 'Auto (System)',
+      update: 'Update',
+      updateTitle: 'App Update',
+      updateSubtitle: 'Check whether a newer version is available.',
+      currentVersion: 'Current version',
+      checkUpdates: 'Check for updates',
+      checking: 'Checking for updates...',
+      upToDate: 'You are up to date.',
+      updateAvailable: 'New version available:',
+      installUpdate: 'Update now',
+      updateReady: 'Applying update...',
+      downloadInstallers: 'View newer version on GitHub',
+      checkFailed: 'Update check failed.',
+      noApk: 'No APK available for this release.',
     },
   }[settings.language];
 
@@ -210,6 +238,56 @@ export function Settings() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="card p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">{t.updateTitle}</h2>
+            <p className="text-sm text-gray-500">{t.updateSubtitle}</p>
+          </div>
+          <span className="badge-info">{t.currentVersion}: {update.currentVersion}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={update.check}
+          className="btn-secondary"
+          disabled={update.status.state === 'checking'}
+        >
+          {update.status.state === 'checking' ? t.checking : t.checkUpdates}
+        </button>
+
+        {update.status.state === 'up-to-date' && (
+          <p className="text-sm text-green-600">{t.upToDate}</p>
+        )}
+
+        {update.status.state === 'check-failed' && (
+          <p className="text-sm text-red-600">{t.checkFailed} ({update.status.message})</p>
+        )}
+
+        {update.status.state === 'update-available' && (
+          <div className="p-4 rounded-lg border border-primary-200 bg-primary-50">
+            <p className="text-sm text-gray-800 mb-3">
+              {t.updateAvailable} <span className="font-semibold text-primary-700">v{update.status.result.latestVersion}</span>
+            </p>
+            <button type="button" onClick={update.performUpdate} className="btn-primary w-full">
+              {update.platform === 'web' ? t.installUpdate : t.downloadInstallers}
+            </button>
+          </div>
+        )}
+
+        {update.status.state === 'downloading' && (
+          <p className="text-sm text-gray-600">{t.updateReady}</p>
+        )}
+
+        {update.status.state === 'update-ready' && (
+          <p className="text-sm text-gray-600">{t.updateReady}</p>
+        )}
+
+        {update.status.state === 'error' && (
+          <p className="text-sm text-red-600">{update.status.message}</p>
+        )}
       </div>
     </div>
   );

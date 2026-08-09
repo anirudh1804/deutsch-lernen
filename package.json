@@ -1,7 +1,7 @@
 {
   "name": "german-learning-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -21,11 +21,13 @@
     "cap:sync": "cap sync",
     "cap:add:android": "cap add android",
     "cap:open:android": "cap open android",
-    "cap:build:android": "cap sync android && cd android && gradlew.bat assembleDebug"
+    "cap:build:android": "npm run build && cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^8.0.2",
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/preferences": "^8.0.1",
     "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-query": "^5.17.0",
     "@tauri-apps/api": "^2.11.1",

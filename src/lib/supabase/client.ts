@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { capacitorStorage } from './storage';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -17,6 +18,9 @@ export const supabase: SupabaseClient = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // Use native Capacitor Preferences on mobile so the session survives
+      // app restarts (localStorage is not reliable in the Android WebView).
+      storage: capacitorStorage,
       // PKCE flow: exchange the auth code for tokens using a one-time
       // code verifier, so tokens never appear in URLs. This is the most
       // secure flow for a pure client-side app.

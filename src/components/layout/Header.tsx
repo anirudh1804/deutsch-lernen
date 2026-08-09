@@ -18,12 +18,12 @@ export function Header() {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div className="max-w-4xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3 md:py-0 md:h-16">
           <Link to="/" className="text-xl font-bold text-primary-600" aria-label="Home">
             Deutsch Lernen
           </Link>
           
-          <nav className="hidden md:flex items-center space-x-6" aria-label="Main navigation">
+          <nav className="flex items-center space-x-3 md:space-x-6" aria-label="Main navigation">
             {navLinks.map(link => (
               <Link
                 key={link.path}
