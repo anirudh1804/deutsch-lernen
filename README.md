@@ -1,16 +1,50 @@
 # German Learning App
 
-A web application for learning German numbers and vocabulary through interactive audio exercises.
+A web application for learning German numbers and vocabulary through interactive
+audio exercises. You hear a number or word spoken in German and type what you hear.
+The same codebase also ships as a **desktop** app (Tauri) and will expand to
+**mobile** (Capacitor) later.
+
+## Live Links
+
+- **Web app (PWA):** <https://german-learning-app-six.vercel.app>
+- **Desktop installer (Windows):** [GitHub Release v0.1.0](https://github.com/anirudh1804/deutsch-lernen/releases/tag/v0.1.0)
+  - `German.Learning.App_0.1.0_x64-setup.exe` (NSIS installer)
+  - `German.Learning.App_0.1.0_x64_en-US.msi` (MSI installer)
+
+---
 
 ## Features
 
-- **Number Practice**: Generate random numbers (0–2,000,000) with up to 2 decimal places, spoken as full German words — the number is only heard, not shown; user types what they hear
-  - Example: audio plays "eintausendzweihundertvierunddreißig Komma sechsundfünfzig" → user types `1234.56`
-- **Vocabulary Practice**: Learn German words by difficulty level (easy/medium/hard) — the word is only heard, not shown; user types the German spelling
-- **Game Modes**: Numbers only, Words only, or Mixed
-- **Audio**: High-quality Google Cloud TTS with Web Speech API fallback
-- **Progress Tracking**: User accounts with Supabase (streaks, scores, history)
-- **Bilingual UI**: German/English toggle (German primary)
+- **Number practice** — random numbers 0–2,000,000 with up to 2 decimal places,
+  spoken as full German words; the number is only heard, never shown.
+  *Example:* audio says "eintausendzweihundertvierunddreißig Komma sechsundfünfzig"
+  → you type `1234.56`.
+- **Vocabulary practice** — German words by difficulty (Easy/Medium/Hard); the
+  word is only heard, you type the German spelling.
+- **Game modes** — Numbers, Words, or Mixed.
+- **Audio** — browser Text-to-Speech (Web Speech API) with voice, speed, and
+  auto-play settings.
+- **User accounts** — register/login with email or username; progress (streaks,
+  scores, history) is stored per user.
+- **Bilingual UI** — German (primary) and English.
+- **PWA** — installable, offline-capable via a service worker.
+
+---
+
+## Platforms
+
+| Platform | Status | How it's delivered |
+|----------|--------|--------------------|
+| Web / PWA | ✅ Live | Hosted on Vercel, installable from the browser |
+| Desktop (Windows) | ✅ Live | Tauri builds the web app into a native window; distributed as `.exe`/`.msi` via GitHub Releases |
+| Mobile (Android/iOS) | 🔜 Planned | Capacitor scaffolded; APK/iOS build to follow |
+
+Because the core is a single React web app, every platform just loads the same
+compiled `dist/` output. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for
+the full stack breakdown.
+
+---
 
 ## Tech Stack
 
@@ -18,112 +52,143 @@ A web application for learning German numbers and vocabulary through interactive
 |-------|-----------|
 | Frontend | React 18 + TypeScript + Vite |
 | Styling | Tailwind CSS |
-| State | Zustand + TanStack Query |
-| Auth/DB | Supabase (Auth + PostgreSQL + Edge Functions) |
-| TTS | Google Cloud TTS (via Edge Function) + Web Speech API fallback |
-| Dictionary | Wiktionary API / DWDS API |
-| Deployment | Vercel (frontend) + Supabase (backend) |
+| State | React Context + Zustand |
+| Auth & DB | Supabase (Auth + PostgreSQL) |
+| Audio | Web Speech API |
+| Desktop shell | Tauri (Rust + system WebView) |
+| Mobile shell | Capacitor (Android; iOS on macOS) |
+| Deployment | Vercel (web) + GitHub Releases (desktop) |
+
+---
+
+## Security & Networking (Secure End-to-End)
+
+This section explains how data travels and how the app is secured from the
+browser down to the database.
+
+### Transport security (HTTPS / TLS)
+- The web app is served over **HTTPS** by Vercel, so all traffic between the
+  browser and the app is encrypted in transit.
+- The desktop app loads the same content in a system WebView over the same
+  secure origins.
+
+### Authentication — Supabase Auth with PKCE
+- Authentication uses **Supabase Auth** with the **PKCE (Proof Key for Code
+  Exchange)** flow.
+- PKCE sends a one-time code challenge instead of a client secret, so the
+  authorization code can never be replayed — a best practice for pure
+  client-side (SPA) apps where a secret can't be safely stored.
+- Tokens are kept in the browser/WebView's **localStorage**, scoped to the app
+  origin, and automatically refreshed. Logout revokes the refresh token
+  server-side.
+
+### Authorization — Row Level Security (RLS)
+- PostgreSQL tables (`profiles`, `game_sessions`, `answers`, `user_vocabulary`)
+  have **Row Level Security (RLS)** enabled.
+- RLS policies let each request only read/write rows belonging to the
+  authenticated user (`auth.uid()`), so a user can never see or modify another
+  user's data even if a request is forged.
+
+### Secrets & environment configuration
+- Supabase credentials live in `.env.local` and are **gitignored** — they are
+  never committed to the repository.
+- Vercel deployments inject `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` from
+  the Vercel environment rather than the repo.
+- `.vercelignore` excludes native build folders and environment files from web
+  uploads, keeping the deploy payload small and secrets out.
+- Only the **anon key** is exposed to the client (safe because RLS governs what
+  it can access); any privileged operations belong server-side.
+
+### Content Security Policy (CSP)
+- `vercel.json` applies a **Content-Security-Policy** header restricting:
+  - scripts/styles to the app's own origin,
+  - network connections (`connect-src`) to the app plus the Supabase domain,
+  - and disables framing (`frame-ancestors 'none'`) and unsafe embedding.
+- This mitigates XSS and data-exfiltration risks.
+
+### Native shell notes
+- The desktop app runs the identical web bundle in the OS WebView, so the same
+  origin/session boundaries apply.
+- The Tauri configuration currently ships with CSP disabled for simplicity; the
+  app does **not** enable any Tauri IPC surface that would expose the backend to
+  the page.
+
+---
+
+## Getting Started (local development)
+
+### Prerequisites
+- Node.js 18+
+- A Supabase project with the migrations in `supabase/migrations/` applied
+
+### Setup
+```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase project URL and anon key
+
+# Start the dev server (http://localhost:3000)
+npm run dev
+```
+
+### Useful commands
+```bash
+npm run typecheck     # TypeScript type check
+npm run lint          # ESLint
+npm run test          # Vitest unit tests
+npm run build         # Production build -> dist/  (also generates PWA assets)
+npm run preview       # Serve the production build locally
+```
+
+### Desktop (Tauri)
+```bash
+npm run tauri:dev     # Run desktop app in dev mode
+npm run tauri:build   # Build installers (.exe / .msi)
+```
+
+### Mobile (Capacitor) — coming later
+```bash
+npm run cap:sync          # Copy web build into the native project
+npm run cap:build:android # Build an Android APK (requires Android SDK/JDK)
+```
+
+---
 
 ## Project Structure
 
 ```
 german-learning-app/
-├── public/
-├── src/
-│   ├── components/
-│   │   ├── ui/           # Reusable UI components (Button, Input, Card, etc.)
-│   │   ├── game/         # Game-specific components (NumberDisplay, AudioPlayer)
-│   │   └── layout/       # Layout components (Header, Footer, LanguageToggle)
-│   ├── features/
-│   │   ├── auth/         # Authentication (login, register, profile)
-│   │   ├── game/         # Game logic, modes, scoring
-│   │   ├── dictionary/   # Word fetching, caching, difficulty classification
-│   │   └── tts/          # TTS abstraction (Google + Web Speech)
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # Utilities, Supabase client, helpers
-│   ├── pages/            # Route pages (Home, Game, Settings, Profile)
-│   ├── store/            # Zustand stores
-│   ├── types/            # TypeScript types
-│   ├── utils/            # numberToGermanWords, formatting
-│   ├── styles/           # Global styles, Tailwind config
-│   ├── i18n/             # German/English translations
-│   ├── App.tsx
-│   └── main.tsx
-├── supabase/
-│   ├── functions/        # Edge Functions (TTS proxy)
-│   ├── migrations/       # Database schema
-│   └── seed/             # Initial data
-├── package.json
-├── tsconfig.json
-├── tailwind.config.js
-├── vite.config.ts
-└── vercel.json
+├── src/                # Shared web application
+│   ├── components/     # Reusable UI + layout components
+│   ├── features/       # auth, game, settings, tts
+│   ├── pages/          # Home, Game, Settings, Profile, auth pages
+│   ├── lib/supabase/   # Supabase client + data modules
+│   ├── utils/          # numberToGermanWords + tests
+│   ├── i18n/           # German / English translations
+│   └── styles/         # Tailwind + global styles
+├── src-tauri/          # Desktop shell (Rust/Tauri)
+├── android/            # Mobile shell (Capacitor Android)
+├── supabase/           # Migrations + config
+├── docs/               # ARCHITECTURE.md, PWA-TROUBLESHOOTING.md
+├── public/             # Static assets, PWA icons
+├── vite.config.mjs     # Vite + PWA build config
+├── capacitor.config.ts # Capacitor config
+├── vercel.json         # Vercel deployment + security headers
+└── .vercelignore       # Excludes native folders/env from web deploys
 ```
 
-## Getting Started
+---
 
-### Prerequisites
-- Node.js 18+
-- Supabase account
-- Google Cloud account (for TTS API)
+## Docs
 
-### Installation
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — full 4-platform architecture
+- [`docs/PWA-TROUBLESHOOTING.md`](docs/PWA-TROUBLESHOOTING.md) — Vite/PWA config
+  issue and resolution
 
-```bash
-# Clone and install
-cd german-learning-app
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your Supabase and Google Cloud credentials
-
-# Start development server
-npm run dev
-```
-
-### Environment Variables
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-GOOGLE_TTS_API_KEY=your_google_cloud_tts_key
-```
-
-## Database Schema
-
-- **profiles** - User preferences (language, username)
-- **game_sessions** - Game sessions with mode, difficulty, scores
-- **answers** - Individual answers with timing and correctness
-
-All tables use Row Level Security (RLS).
-
-## Development
-
-```bash
-# Run dev server
-npm run dev
-
-# Type check
-npm run typecheck
-
-# Lint
-npm run lint
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-## Deployment
-
-1. Push to GitHub
-2. Connect repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy Supabase Edge Functions: `supabase functions deploy tts-proxy`
-5. Run migrations: `supabase db push`
+---
 
 ## License
 
