@@ -30,32 +30,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  // Set the session state and (re)hydrate the user profile when a session exists.
+  const applySession = useCallback(async (session: {
+    access_token: string;
+    refresh_token: string;
+    user: { id: string; email?: string };
+  } | null) => {
+    setState(prev => ({
+      ...prev,
+      session: session ? mapSession(session) : null,
+      loading: false,
+    }));
+    if (session?.user) {
+      await hydrateUser(session.user.id, session.user.email);
+    }
+  }, [hydrateUser]);
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setState(prev => ({
-        ...prev,
-        session: session ? mapSession(session) : null,
-        loading: false,
-      }));
-      if (session?.user) {
-        hydrateUser(session.user.id, session.user.email);
-      }
+      applySession(session);
     });
 
-    // Listen to auth changes
+    // Listen to auth changes (login, logout, token refresh/expiry)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setState(prev => ({
-          ...prev,
-          session: session ? mapSession(session) : null,
-          loading: false,
-        }));
+        // Always reflect the latest session/token state so the UI never
+        // shows a stale "logged in" state.
+        await applySession(session);
 
-        if (session?.user) {
-          await hydrateUser(session.user.id, session.user.email);
-        } else if (event === 'SIGNED_OUT') {
-          setState(prev => ({ ...prev, user: null }));
+        if (event === 'SIGNED_OUT') {
+          setState({ user: null, session: null, loading: false, error: null });
         }
       }
     );
@@ -63,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [hydrateUser]);
+  }, [applySession, hydrateUser]);
 
   const login = useCallback(async ({ identifier, password }: LoginCredentials) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -108,7 +113,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
+    // Revoke the refresh token server-side (not just client-side) so the
+    // session truly ends and old tokens can't mint new ones afterwards.
+    await supabase.auth.signOut({ scope: 'global' });
     setState({ user: null, session: null, loading: false, error: null });
   }, []);
 

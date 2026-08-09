@@ -17,6 +17,10 @@ export const supabase: SupabaseClient = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // PKCE flow: exchange the auth code for tokens using a one-time
+      // code verifier, so tokens never appear in URLs. This is the most
+      // secure flow for a pure client-side app.
+      flowType: 'pkce',
     },
   }
 );
