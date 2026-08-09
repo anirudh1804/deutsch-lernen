@@ -3,7 +3,7 @@
 ## Project Overview
 A web application for learning German numbers and vocabulary through interactive audio exercises.
 
-**Tech Stack**: React 18 + TypeScript + Vite + Tailwind CSS + Zustand + TanStack Query + Supabase
+**Tech Stack**: React 18 + TypeScript + Vite + Tailwind CSS + React Context + Supabase
 
 ---
 
@@ -11,9 +11,9 @@ A web application for learning German numbers and vocabulary through interactive
 
 ### 1. Project Setup & Configuration
 - [x] Vite + React + TypeScript project initialization
-- [x] Tailwind CSS configuration with custom German color palette
+- [x] Tailwind CSS configuration with custom German color palette and `darkMode: 'class'`
 - [x] ESLint + TypeScript strict mode configuration
-- [x] Path aliases (@/, @components/, @features/, etc.)
+- [x] Path aliases (`@/`, `@components/`, `@features/`, etc.)
 - [x] Vercel deployment configuration (vercel.json)
 - [x] Environment variables template (.env.example)
 - [x] Git ignore file
@@ -27,13 +27,13 @@ A web application for learning German numbers and vocabulary through interactive
     - 100 → "einhundert"
     - 1,000,001 → "eine million eins"
     - 1,234,567 → "eine millionzweihundertvierunddreißigtausendfünfhundertsiebenundsechzig"
-  - **19 passing tests** covering all edge cases
+  - Passing tests covering all edge cases
 
 ### 3. Internationalization (i18n)
 - [x] German translations (`src/i18n/de.json`) - Primary language
 - [x] English translations (`src/i18n/en.json`)
-- [x] Translation hook (`useTranslation`) with namespace support
-- [x] Language toggle component (DE/EN)
+- [x] Language toggle component (DE/EN) in the header
+- [x] Per-page translation objects (Home, Game, Settings, Profile)
 
 ### 4. UI Component Library (`src/components/ui/`)
 - [x] **Button** - Primary, secondary, outline, ghost, danger variants + loading state
@@ -47,7 +47,7 @@ A web application for learning German numbers and vocabulary through interactive
 - [x] **Toggle** - Button group for mode/difficulty selection
 
 ### 5. Layout Components (`src/components/layout/`)
-- [x] **Header** - Logo, navigation, language toggle, auth buttons/user menu
+- [x] **Header** - Logo, navigation tabs (Home/Game/Settings/Profile), language toggle, auth buttons/user menu
 - [x] **Footer** - Copyright, GitHub link
 - [x] **MainLayout** - Wrapper with Outlet for nested routes
 - [x] **LanguageToggle** - DE/EN switch with flags
@@ -58,59 +58,67 @@ A web application for learning German numbers and vocabulary through interactive
 - [x] **Login Page** - Email/password, validation, redirect after login
 - [x] **Register Page** - Username, email, password, confirmation
 - [x] **ProtectedRoute** - Guards private routes, redirects to login
-- [x] **Auth Guard** - Loading state during auth initialization
 
 ### 7. Game Engine (`src/features/game/`)
-- [x] **GameContext** - Session management, question generation, scoring
+- [x] **GameContext** - Session management, question generation, scoring (React Context)
 - [x] **TypeScript types** - GameMode, Difficulty, Question, Answer, Session, Settings
 - [x] **Game Modes**: Numbers, Words, Mixed
 - [x] **Difficulties**: Easy, Medium, Hard
-- [x] **Scoring System**:
-  - Base points: 10 per correct answer
-  - Difficulty multiplier: Easy 1x, Medium 1.5x, Hard 2x
-  - Streak bonus: +2 per streak (capped at +20)
-  - Speed bonus: <3s = +5, <5s = +3
-- [x] **Answer Validation** - Normalized comparison (case-insensitive, trimmed)
+- [x] **Question Generation**:
+  - Numbers via `numberToGermanWords` + random range by difficulty
+  - Words via `src/data/words.ts` vocabulary with translations and part of speech
+  - "Repeat-to-learn" logic that occasionally re-presents items the user is still learning (1-2 correct answers)
+- [x] **Scoring System** - Full points for new correct answers, reduced points on repeats
+- [x] **Answer Validation** - Normalized comparison (case-insensitive, trimmed) and numeric comparison supporting German comma decimals
+- [x] **Answer History** with per-question feedback ("Richtig"/"Falsch")
 
-### 8. Settings Management (`src/features/settings/`)
+### 8. TTS / Audio (`src/features/tts/`)
+- [x] **useTTS hook** - Browser Web Speech API (`speechSynthesis`) speech synthesis
+- [x] Voice selection that maps to actual voices available in the browser (with an "Auto (System)" option)
+- [x] Playback speed control (rate)
+- [x] Auto-play toggle on new questions
+
+### 9. Settings Management (`src/features/settings/`)
 - [x] **SettingsContext** - Persisted to localStorage
-- [x] Settings: Language, Voice, Speed, Auto-play, Theme
+- [x] Settings: Language, Voice, Speed, Auto-play, Theme (Light/Dark/System)
 - [x] **Settings Page** - Full UI for all settings
 
-### 9. Pages (`src/pages/`)
+### 10. Pages (`src/pages/`)
 - [x] **Home** - Mode selection cards (Numbers/Words/Mixed), difficulty badges
-- [x] **Game** - Audio player, answer input, feedback ("Richtig"/"Falsch"), history
+- [x] **Game** - Audio player, answer input, feedback, answer history
 - [x] **Settings** - Language, voice selection, speed slider, theme picker
 - [x] **Profile** - Stats grid, vocabulary progress, game history table
 - [x] **Login/Register** - Form validation, error handling
 - [x] **NotFound** - 404 page with home link
 
-### 10. Styling (`src/styles/globals.css`)
+### 11. Styling (`src/styles/globals.css`)
 - [x] Tailwind base, components, utilities
 - [x] Custom component classes (.btn, .input, .card, .badge)
 - [x] Animations (fade-in, slide-up, pulse-soft)
 - [x] Custom scrollbar, selection, audio player styling
-- [x] Print styles, dark mode support
+- [x] Print styles
+- [x] Dark mode via `.dark` class with retrofitted overrides for common gray utilities and component classes
 
-### 11. Supabase Backend (`supabase/`)
-- [x] **Database Schema** (`migrations/001_initial_schema.sql`):
-  - `profiles` - User preferences (language, username)
-  - `game_sessions` - Mode, difficulty, scores, streaks, timestamps
-  - `answers` - Individual question answers with timing
-  - `user_vocabulary` - Learned words with mastery tracking
-  - Indexes for performance
-- [x] **Row Level Security** (`migrations/002_rls_policies.sql`):
-  - Policies for all tables (users only access own data)
-- [x] **TTS Edge Function** (`functions/tts-proxy/`):
-  - Secure Google Cloud TTS proxy (hides API key)
-  - CORS handling, input validation, error responses
-  - Supports voice selection, speed control
+### 12. Supabase Backend (`supabase/` + `src/lib/supabase/`)
+- [x] **Client** (`client.ts`), auth, profiles, games, stats, vocabulary modules
+- [x] **Database migrations**: profiles, game_sessions, answers, user_vocabulary + RLS policies
+- [x] **TTS Edge Function** (`functions/tts-proxy/`)
 
-### 12. Testing
+### 13. Testing & Build
 - [x] Vitest configuration
-- [x] 19 unit tests for numberToGermanWords (all passing)
+- [x] Unit tests for numberToGermanWords and words data
 - [x] TypeScript type checking passes
 - [x] Production build successful
+
+---
+
+## 🐛 Recent Bug Fixes
+
+- [x] **Bug 1: Voice setting had no effect** — `useTTS` ignored `settings.voice`; it now uses the selected voice, and the Settings voice dropdown lists the German voices actually available in the browser (Web Speech API).
+- [x] **Bug 2: Dark/system theme did not change** — Tailwind had no `darkMode` configured (defaulted to `media`), and the app had no dark styles. Added `darkMode: 'class'`, made the theme apply live (including OS changes in System mode), and retrofitted dark styles in `globals.css`.
+- [x] **Bug 3: Theme button contrast ("Dunkel" invisible)** — Selected theme button text was light-on-light in dark mode; now uses explicit `text-primary-900`/`dark:text-primary-50` for the selected state and `dark:text-gray-100` for unselected.
+- [x] **Bug 4: Answer field did not reset / could not be edited** — The input was uncontrolled and `showFeedback` checked only whether *any* answer existed, so after "Weiter" the old feedback stayed and the field stayed disabled. Now the input is controlled and reset on each new question, and feedback only shows for the **current** question (`lastAnswer.questionId === currentQuestion?.id`).
+- [x] **Bug 5: "Lade Spiel" loading loop on tab switches** — The auto-start effect could retry infinitely and re-fire on remount; guarded to run once per page visit. The spinner render condition was also `!isPlaying || isLoading`, showing an endless spinner for any idle/finished game; now it only shows while actually loading.
 
 ---
 
@@ -130,34 +138,35 @@ german-learning-app/
 ├── .env.example
 ├── .gitignore
 ├── public/
-│   └── (static assets)
 ├── src/
 │   ├── main.tsx                 # Entry point with providers
-│   ├── App.tsx                  # Routes
-│   ├── vite-env.d.ts
+│   ├── App.tsx                  # Routes + Auth/Settings/Game providers
 │   ├── components/
 │   │   ├── ui/                  # 10 reusable components
-│   │   ├── layout/              # 4 layout components
+│   │   ├── layout/              # Header, Footer, MainLayout, LanguageToggle
 │   │   ├── auth/                # ProtectedRoute
+│   │   ├── game/                # Game-specific components
 │   │   └── index.ts
 │   ├── features/
-│   │   ├── auth/                # AuthContext, pages, types
+│   │   ├── auth/                # AuthContext, types
 │   │   ├── game/                # GameContext, types
 │   │   ├── settings/            # SettingsContext
+│   │   ├── tts/                 # useTTS hook (Web Speech API)
+│   │   ├── dictionary/          # (in progress)
 │   │   └── index.ts
-│   ├── pages/                   # 7 page components
-│   ├── utils/
-│   │   ├── numberToGermanWords.ts    # Core converter
-│   │   └── numberToGermanWords.test.ts
-│   ├── i18n/                    # de.json, en.json, hooks
+│   ├── pages/                   # Home, Game, Settings, Profile, auth, NotFound
+│   ├── data/words.ts            # Vocabulary data
+│   ├── lib/supabase/            # client, auth, games, stats, vocabulary, profiles
+│   ├── store/                   # (available)
+│   ├── utils/                   # numberToGermanWords.ts + tests
+│   ├── i18n/                    # de.json, en.json
 │   ├── styles/globals.css
-│   └── hooks/ (empty, ready for custom hooks)
+│   ├── types/
+│   └── hooks/
 ├── supabase/
 │   ├── config.toml
-│   ├── migrations/
-│   │   ├── 001_initial_schema.sql
-│   │   └── 002_rls_policies.sql
-│   └── functions/tts-proxy/     # Deno Edge Function
+│   ├── migrations/              # schema + RLS
+│   └── functions/tts-proxy/
 └── dist/                        # Production build output
 ```
 
@@ -165,31 +174,31 @@ german-learning-app/
 
 ## 🎯 Next Implementation Steps
 
-### Phase 1: Backend Integration (Priority)
-- [ ] Create Supabase project
+### Phase 1: Live Supabase Backend (Priority)
+The Supabase integration is written (`src/lib/supabase/` + `features/auth`, `features/game`) and AuthContext already uses real Supabase Auth, but the app currently runs with a placeholder client until a project is configured.
+- [ ] Create/configure a Supabase project
+- [ ] Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to `.env.local`
 - [ ] Run migrations: `supabase db push`
 - [ ] Deploy TTS Edge Function: `supabase functions deploy tts-proxy`
 - [ ] Add Google Cloud TTS API key to Supabase secrets
-- [ ] Connect AuthContext to real Supabase Auth
-- [ ] Connect GameContext to Supabase (sessions, answers)
+- [ ] Verify login/register and game session/answer persistence against the live backend
 
 ### Phase 2: Dictionary Integration
+The `features/dictionary/` module exists but is empty — no real vocabulary source yet (currently uses static `src/data/words.ts`).
 - [ ] Wiktionary API integration for German words
 - [ ] Difficulty classification (frequency-based)
 - [ ] Word caching (localStorage + IndexedDB)
 - [ ] Word fetching hooks
 
 ### Phase 3: TTS & Audio
-- [ ] Google TTS Provider implementation
-- [ ] Web Speech API fallback
+Web Speech API playback already works (voice, speed, auto-play). Remaining:
+- [ ] Google TTS Provider implementation (falls back to Web Speech API)
 - [ ] Audio caching (IndexedDB)
-- [ ] Auto-play / manual play controls
 
 ### Phase 4: Game Features
-- [ ] Real question generation (numbers + words)
-- [ ] Session persistence to database
-- [ ] Streak/score tracking in Profile
-- [ ] Vocabulary learning tracking
+Core gameplay is complete; server-side reporting remains tied to Phase 1.
+- [ ] Verify session persistence and streak/score tracking surface in Profile end-to-end
+- [ ] Vocabulary mastery tracking polish
 
 ### Phase 5: Polish & Deploy
 - [ ] Accessibility audit (ARIA, keyboard nav)
@@ -205,7 +214,7 @@ german-learning-app/
 | Metric | Status |
 |--------|--------|
 | TypeScript Errors | 0 |
-| Test Coverage (utils) | 100% (19/19 passing) |
+| Tests | Passing (utils + words) |
 | Build Status | ✅ Success |
 | Components Created | 21 |
 | Pages Created | 7 |
@@ -214,5 +223,5 @@ german-learning-app/
 
 ---
 
-*Last Updated: 2026-08-06*
-*Version: 0.1.0 (Foundation Complete)*
+*Last Updated: 2026-08-09*
+*Version: 0.2.0 (Core Gameplay + Bug Fixes Complete)*

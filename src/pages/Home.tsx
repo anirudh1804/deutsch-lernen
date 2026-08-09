@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 import { useGame } from '@/features/game';
 import { useSettings } from '@/features/settings';
 
 export function Home() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { startGame } = useGame();
   const { settings } = useSettings();
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
   const t = {
     de: {
@@ -37,8 +38,9 @@ export function Home() {
     },
   }[settings.language];
 
-  const handleStart = (mode: 'numbers' | 'words' | 'mixed') => {
-    startGame(mode, difficulty);
+  const handleStart = async (mode: 'numbers' | 'words' | 'mixed') => {
+    await startGame(mode, difficulty);
+    navigate('/game');
   };
 
   return (
@@ -56,13 +58,10 @@ export function Home() {
           { mode: 'words' as const, label: t.startWords, icon: '📝', color: 'green' },
           { mode: 'mixed' as const, label: t.startMixed, icon: '🎲', color: 'purple' },
         ].map(({ mode, label, icon, color }) => (
-          <Link
+          <button
             key={mode}
-            to="/game"
-            onClick={(e) => {
-              e.preventDefault();
-              handleStart(mode);
-            }}
+            type="button"
+            onClick={() => handleStart(mode)}
             className={`card-hover p-6 text-center group ${color}-50 border-${color}-100`}
           >
             <div className="text-4xl mb-4">{icon}</div>
@@ -74,7 +73,7 @@ export function Home() {
               {mode === 'words' && (settings.language === 'de' ? 'Nach Schwierigkeit' : 'By difficulty')}
               {mode === 'mixed' && (settings.language === 'de' ? 'Zahlen & Wörter' : 'Numbers & Words')}
             </p>
-          </Link>
+          </button>
         ))}
       </div>
 

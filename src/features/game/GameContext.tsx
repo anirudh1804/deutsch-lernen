@@ -182,7 +182,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const endGame = useCallback(async () => {
     const prev = state.session;
     if (prev?.id) {
-      completeGameSession(prev.id, {
+      await completeGameSession(prev.id, {
         score: prev.score,
         streak: prev.streak,
         maxStreak: prev.maxStreak,

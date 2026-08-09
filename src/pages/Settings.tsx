@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useSettings } from '@/features/settings';
 import { useAuth } from '@/features/auth';
+import { useTTS } from '@/features/tts';
 
 export function Settings() {
   const { settings, updateSettings } = useSettings();
   const { user, updateProfile } = useAuth();
+  const { voices } = useTTS();
   const [username, setUsername] = useState(user?.username || '');
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
@@ -27,6 +29,7 @@ export function Settings() {
       account: 'Konto',
       username: 'Benutzername',
       email: 'E-Mail',
+      autoVoice: 'Auto (System)',
     },
     en: {
       title: 'Settings',
@@ -46,6 +49,7 @@ export function Settings() {
       account: 'Account',
       username: 'Username',
       email: 'Email',
+      autoVoice: 'Auto (System)',
     },
   }[settings.language];
 
@@ -130,14 +134,25 @@ export function Settings() {
 
         <div>
           <label className="label">{t.voice}</label>
-          <select className="input" value={settings.voice} onChange={(e) => updateSettings({ voice: e.target.value })}>
-            <option value="de-DE-Neural2-A">Neural2-A (Female, Natural)</option>
-            <option value="de-DE-Neural2-B">Neural2-B (Male, Natural)</option>
-            <option value="de-DE-Wavenet-A">Wavenet-A (Female)</option>
-            <option value="de-DE-Wavenet-B">Wavenet-B (Male)</option>
-            <option value="de-DE-Standard-A">Standard-A (Female)</option>
-            <option value="de-DE-Standard-B">Standard-B (Male)</option>
+          <select
+            className="input"
+            value={voices.some(v => v.voiceURI === settings.voice) ? settings.voice : ''}
+            onChange={(e) => updateSettings({ voice: e.target.value })}
+          >
+            <option value="">{t.autoVoice}</option>
+            {voices.map((v) => (
+              <option key={v.voiceURI} value={v.voiceURI}>
+                {v.name} ({v.localService ? 'lokal' : 'online'})
+              </option>
+            ))}
           </select>
+          {voices.length === 0 && (
+            <p className="text-xs text-gray-400 mt-1">
+              {settings.language === 'de'
+                ? 'Keine deutschen Stimmen im Browser gefunden.'
+                : 'No German voices found in your browser.'}
+            </p>
+          )}
         </div>
 
         <div>
@@ -187,8 +202,8 @@ export function Settings() {
               onClick={() => updateSettings({ theme: value as 'light' | 'dark' | 'system' })}
               className={`flex-1 p-4 rounded-lg border-2 transition-colors ${
                 settings.theme === value
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 dark:border-primary-400 text-primary-900 dark:text-primary-50'
+                  : 'border-gray-200 hover:border-gray-300 text-gray-900 dark:text-gray-100'
               }`}
             >
               {label}

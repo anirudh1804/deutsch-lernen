@@ -1,9 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/features/game';
 import { useSettings } from '@/features/settings';
 import { useTTS } from '@/features/tts';
 
 export function Game() {
+  const navigate = useNavigate();
+  const [answer, setAnswer] = useState('');
+  const autoStartedRef = useRef(false);
   const { 
     session, 
     currentQuestion, 
@@ -16,7 +20,29 @@ export function Game() {
     startGame,
   } = useGame();
   const { settings } = useSettings();
-  const { speak, isSpeaking } = useTTS({ rate: settings.speed });
+  const { speak, isSpeaking } = useTTS({ rate: settings.speed, voice: settings.voice });
+
+  // Reset the answer field whenever the question changes.
+  useEffect(() => {
+    setAnswer('');
+  }, [currentQuestion?.id]);
+
+  // Save progress and return home when the user ends the game.
+  const handleEndGame = async () => {
+    await endGame();
+    navigate('/');
+  };
+
+  // If the user navigates straight to /game (e.g. via the "Spielen" tab)
+  // without picking a mode, start a default mixed + medium game.
+  // Guarded to run at most once per page visit so it never retries/loops.
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (!session && !isPlaying && !isLoading) {
+      autoStartedRef.current = true;
+      startGame('mixed', 'medium');
+    }
+  }, [session, isPlaying, isLoading, startGame]);
 
   useEffect(() => {
     if (currentQuestion && settings.autoPlayAudio !== false) {
@@ -63,7 +89,9 @@ export function Game() {
     },
   }[settings.language];
 
-  if (!isPlaying || isLoading) {
+  // Show a real spinner only while a game is actually loading, so a finished
+  // or idle game never gets stuck on the "Lade Spiel" screen.
+  if (isLoading) {
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent mx-auto mb-4"></div>
@@ -78,22 +106,20 @@ export function Game() {
         <h2 className="text-2xl font-bold text-gray-900 mb-4">{settings.language === 'de' ? 'Kein aktives Spiel' : 'No active game'}</h2>
         <p className="text-gray-600 mb-6">{settings.language === 'de' ? 'Wähle einen Modus auf der Startseite' : 'Select a mode on the home page'}</p>
         <button 
-          onClick={() => startGame('numbers', 'easy')}
+          onClick={() => startGame('mixed', 'medium')}
           className="btn-primary"
         >
-          {settings.language === 'de' ? 'Zahlen starten' : 'Start Numbers'}
+          {settings.language === 'de' ? 'Gemischt starten' : 'Start Mixed'}
         </button>
       </div>
     );
   }
 
   const lastAnswer = answers[answers.length - 1];
-  const showFeedback = !!lastAnswer;
+  const showFeedback = !!lastAnswer && lastAnswer.questionId === currentQuestion?.id;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const answer = formData.get('answer') as string;
     if (answer.trim()) {
       submitAnswer(answer.trim());
     }
@@ -117,7 +143,7 @@ export function Game() {
             <p className="text-2xl font-bold text-gray-900">{session.totalQuestions + 1}</p>
           </div>
         </div>
-        <button onClick={endGame} className="btn-ghost text-sm">
+        <button onClick={handleEndGame} className="btn-ghost text-sm">
           {t.endGame}
         </button>
       </div>
@@ -165,6 +191,8 @@ export function Game() {
                 className="input text-center text-lg font-mono mb-4"
                 autoComplete="off"
                 autoFocus
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
                 placeholder={settings.language === 'de' ? 'Tippe die Antwort ein...' : 'Type your answer...'}
                 disabled={showFeedback}
               />

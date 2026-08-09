@@ -45,13 +45,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem('app-settings', JSON.stringify(settings));
-    
-    // Apply theme
-    if (settings.theme === 'dark' || (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+
+    const applyTheme = () => {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = settings.theme === 'dark' || (settings.theme === 'system' && prefersDark);
+      document.documentElement.classList.toggle('dark', isDark);
+    };
+
+    applyTheme();
+
+    // In "system" mode, react live to OS theme changes.
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => {
+      if (settings.theme === 'system') applyTheme();
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
   }, [settings]);
 
   const updateSettings = (newSettings: Partial<Settings>) => {

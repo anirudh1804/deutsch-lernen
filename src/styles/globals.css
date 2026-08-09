@@ -131,3 +131,42 @@ audio::-webkit-media-controls-play-button {
     display: none !important;
   }
 }
+
+/* ── Dark mode (retrofitted via .dark class, darkMode: 'class') ────────── */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark * {
+  @apply border-gray-700;
+}
+
+/* Backgrounds */
+.dark .bg-white { background-color: #1f2937; } /* gray-800 */
+.dark .bg-gray-50 { background-color: #111827; } /* gray-900 */
+.dark .bg-gray-100 { background-color: #1f2937; } /* gray-800 */
+.dark .bg-gray-200 { background-color: #374151; } /* gray-700 */
+
+/* Text */
+.dark .text-gray-900 { color: #f3f4f6; } /* gray-100 */
+.dark .text-gray-700 { color: #e5e7eb; } /* gray-200 */
+.dark .text-gray-600 { color: #d1d5db; } /* gray-300 */
+.dark .text-gray-500 { color: #9ca3af; } /* gray-400 */
+.dark .text-gray-400 { color: #6b7280; } /* gray-500 */
+
+/* Borders & dividers */
+.dark .border-gray-100 { border-color: #1f2937; } /* gray-800 */
+.dark .border-gray-200 { border-color: #374151; } /* gray-700 */
+.dark .border-gray-300 { border-color: #4b5563; } /* gray-600 */
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #374151; } /* gray-700 */
+
+/* Shared component classes */
+.dark .card { @apply bg-gray-800 border-gray-700; }
+.dark .input { @apply bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-500; }
+.dark .btn-secondary { @apply bg-gray-700 text-gray-100 hover:bg-gray-600; }
+.dark .btn-ghost { @apply text-gray-300 hover:bg-gray-800; }
+.dark .label { @apply text-gray-300; }
