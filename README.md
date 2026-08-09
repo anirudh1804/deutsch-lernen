@@ -2,15 +2,17 @@
 
 A web application for learning German numbers and vocabulary through interactive
 audio exercises. You hear a number or word spoken in German and type what you hear.
-The same codebase also ships as a **desktop** app (Tauri) and will expand to
-**mobile** (Capacitor) later.
+The same codebase ships as a **web** app (PWA), a **desktop** app (Tauri), and a
+**mobile** app (Capacitor/Android).
 
 ## Live Links
 
 - **Web app (PWA):** <https://german-learning-app-six.vercel.app>
-- **Desktop installer (Windows):** [GitHub Release v0.1.0](https://github.com/anirudh1804/deutsch-lernen/releases/tag/v0.1.0)
-  - `German.Learning.App_0.1.0_x64-setup.exe` (NSIS installer)
-  - `German.Learning.App_0.1.0_x64_en-US.msi` (MSI installer)
+- **Desktop installer (Windows):** [GitHub Release v0.2.0](https://github.com/anirudh1804/deutsch-lernen/releases/tag/v0.2.0)
+  - `German.Learning.App_0.2.0_x64-setup.exe` (NSIS installer)
+  - `German.Learning.App_0.2.0_x64_en-US.msi` (MSI installer)
+- **Android APK:** [GitHub Release v0.2.0](https://github.com/anirudh1804/deutsch-lernen/releases/tag/v0.2.0)
+  - `app-release.apk` (signed release APK)
 
 ---
 
@@ -23,8 +25,11 @@ The same codebase also ships as a **desktop** app (Tauri) and will expand to
 - **Vocabulary practice** — German words by difficulty (Easy/Medium/Hard); the
   word is only heard, you type the German spelling.
 - **Game modes** — Numbers, Words, or Mixed.
-- **Audio** — browser Text-to-Speech (Web Speech API) with voice, speed, and
-  auto-play settings.
+- **Audio** — Text-to-Speech with voice, speed, and auto-play settings. Uses the
+  device/browser TTS engine (native on mobile, Web Speech API in the browser).
+- **In-app updates** — Settings → Update checks GitHub Releases for a newer
+  version; desktop downloads the installer, Android downloads the APK, web reloads
+  the new build.
 - **User accounts** — register/login with email or username; progress (streaks,
   scores, history) is stored per user.
 - **Bilingual UI** — German (primary) and English.
@@ -38,7 +43,8 @@ The same codebase also ships as a **desktop** app (Tauri) and will expand to
 |----------|--------|--------------------|
 | Web / PWA | ✅ Live | Hosted on Vercel, installable from the browser |
 | Desktop (Windows) | ✅ Live | Tauri builds the web app into a native window; distributed as `.exe`/`.msi` via GitHub Releases |
-| Mobile (Android/iOS) | 🔜 Planned | Capacitor scaffolded; APK/iOS build to follow |
+| Mobile (Android) | ✅ Live | Capacitor builds the web app into a native APK; distributed as `app-release.apk` via GitHub Releases |
+| Mobile (iOS) | 🔜 Planned | Requires macOS + Xcode |
 
 Because the core is a single React web app, every platform just loads the same
 compiled `dist/` output. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for
@@ -54,10 +60,10 @@ the full stack breakdown.
 | Styling | Tailwind CSS |
 | State | React Context + Zustand |
 | Auth & DB | Supabase (Auth + PostgreSQL) |
-| Audio | Web Speech API |
+| Audio | Web Speech API (web/desktop) + native TTS (mobile) |
 | Desktop shell | Tauri (Rust + system WebView) |
 | Mobile shell | Capacitor (Android; iOS on macOS) |
-| Deployment | Vercel (web) + GitHub Releases (desktop) |
+| Deployment | Vercel (web) + GitHub Releases (desktop & Android) |
 
 ---
 
@@ -78,8 +84,9 @@ browser down to the database.
 - PKCE sends a one-time code challenge instead of a client secret, so the
   authorization code can never be replayed — a best practice for pure
   client-side (SPA) apps where a secret can't be safely stored.
-- Tokens are kept in the browser/WebView's **localStorage**, scoped to the app
-  origin, and automatically refreshed. Logout revokes the refresh token
+- Tokens are persisted and automatically refreshed: `localStorage` in the
+  browser/WebView on web & desktop, and native **Capacitor Preferences** on
+  mobile so the session survives app restarts. Logout revokes the refresh token
   server-side.
 
 ### Authorization — Row Level Security (RLS)
@@ -149,11 +156,15 @@ npm run tauri:dev     # Run desktop app in dev mode
 npm run tauri:build   # Build installers (.exe / .msi)
 ```
 
-### Mobile (Capacitor) — coming later
+### Mobile (Capacitor / Android)
 ```bash
 npm run cap:sync          # Copy web build into the native project
 npm run cap:build:android # Build an Android APK (requires Android SDK/JDK)
+npm run cap:open:android  # Open the project in Android Studio
 ```
+To produce a **signed release APK**, run `assembleRelease` from the `android/`
+folder with a keystore configured in `android/app/build.gradle` and a local
+`keystore.properties` (gitignored).
 
 ---
 
@@ -163,9 +174,9 @@ npm run cap:build:android # Build an Android APK (requires Android SDK/JDK)
 german-learning-app/
 ├── src/                # Shared web application
 │   ├── components/     # Reusable UI + layout components
-│   ├── features/       # auth, game, settings, tts
+│   ├── features/       # auth, game, settings, tts, update
 │   ├── pages/          # Home, Game, Settings, Profile, auth pages
-│   ├── lib/supabase/   # Supabase client + data modules
+│   ├── lib/supabase/   # Supabase client, storage adapter + data modules
 │   ├── utils/          # numberToGermanWords + tests
 │   ├── i18n/           # German / English translations
 │   └── styles/         # Tailwind + global styles
