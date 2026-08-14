@@ -6,7 +6,7 @@ import { useSettings } from '@/features/settings';
 
 export function Home() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { startGame } = useGame();
   const { settings } = useSettings();
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
@@ -47,7 +47,7 @@ export function Home() {
     <div className="space-y-8">
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          {t.welcome}{user ? `, ${user.username || user.email}` : ''}
+          {t.welcome}{isGuest ? ', ' + (settings.language === 'de' ? 'Gast' : 'Guest') : (user ? `, ${user.username || user.email}` : '')}
         </h1>
         <p className="text-lg text-gray-600">{t.subtitle}</p>
       </div>

@@ -3,10 +3,11 @@ import { useSettings } from '@/features/settings';
 import { useAuth } from '@/features/auth';
 import { useTTS } from '@/features/tts';
 import { useUpdate } from '@/features/update';
+import { Link } from 'react-router-dom';
 
 export function Settings() {
   const { settings, updateSettings } = useSettings();
-  const { user, updateProfile } = useAuth();
+  const { user, isGuest, updateProfile } = useAuth();
   const { voices } = useTTS();
   const update = useUpdate();
   const [username, setUsername] = useState(user?.username || '');
@@ -45,6 +46,9 @@ export function Settings() {
       downloadInstallers: 'Neuere Version auf GitHub ansehen',
       checkFailed: 'Update-Prüfung fehlgeschlagen.',
       noApk: 'Für diese Version ist keine APK verfügbar.',
+      guestAccountTitle: 'Konto',
+      guestAccountSubtitle: 'Du spielst als Gast. Melde dich an, um Benutzername, E-Mail und Fortschritt zu speichern.',
+      login: 'Anmelden',
     },
     en: {
       title: 'Settings',
@@ -78,6 +82,9 @@ export function Settings() {
       downloadInstallers: 'View newer version on GitHub',
       checkFailed: 'Update check failed.',
       noApk: 'No APK available for this release.',
+      guestAccountTitle: 'Account',
+      guestAccountSubtitle: 'You are playing as a guest. Log in to save your username, email, and progress.',
+      login: 'Log in',
     },
   }[settings.language];
 
@@ -101,6 +108,12 @@ export function Settings() {
 
       <div className="card p-6 space-y-6">
         <h2 className="text-lg font-semibold text-gray-900">{t.account}</h2>
+        {isGuest ? (
+          <div className="space-y-4">
+            <p className="text-gray-600">{t.guestAccountSubtitle}</p>
+            <Link to="/login" className="btn-primary inline-block">{t.login}</Link>
+          </div>
+        ) : (
         <div className="space-y-4">
           <div>
             <label className="label">{t.username}</label>
@@ -143,6 +156,7 @@ export function Settings() {
             />
           </div>
         </div>
+        )}
       </div>
 
       <div className="card p-6 space-y-6">

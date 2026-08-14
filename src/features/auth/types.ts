@@ -4,6 +4,7 @@ export interface User {
   username?: string;
   preferredLanguage: 'de' | 'en';
   created_at?: string;
+  isGuest?: boolean;
 }
 
 export interface Session {
@@ -17,6 +18,7 @@ export interface AuthState {
   session: Session | null;
   loading: boolean;
   error: string | null;
+  isGuest: boolean;
 }
 
 export interface LoginCredentials {

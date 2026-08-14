@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useGame } from '@/features/game';
 import { useSettings } from '@/features/settings';
 import { useTTS } from '@/features/tts';
+import { useAuth } from '@/features/auth';
 
 export function Game() {
   const navigate = useNavigate();
@@ -14,11 +15,14 @@ export function Game() {
     answers, 
     isPlaying, 
     isLoading,
+    guestAttemptsUsed,
+    guestLimitReached,
     submitAnswer,
     nextQuestion,
     endGame,
     startGame,
   } = useGame();
+  const { isGuest } = useAuth();
   const { settings } = useSettings();
   const { speak, isSpeaking } = useTTS({ rate: settings.speed, voice: settings.voice });
 
@@ -71,6 +75,7 @@ export function Game() {
       gameOver: 'Spiel beendet',
       finalScore: 'Endstand',
       playAgain: 'Erneut spielen',
+      attempts: '15',
     },
     en: {
       score: 'Score',
@@ -86,6 +91,7 @@ export function Game() {
       gameOver: 'Game Over',
       finalScore: 'Final Score',
       playAgain: 'Play Again',
+      attempts: '15',
     },
   }[settings.language];
 
@@ -142,6 +148,12 @@ export function Game() {
             <p className="text-sm text-gray-500">{t.question}</p>
             <p className="text-2xl font-bold text-gray-900">{session.totalQuestions + 1}</p>
           </div>
+          {isGuest && (
+            <div className="border-l border-gray-200 pl-4">
+              <p className="text-sm text-gray-500">{settings.language === 'de' ? 'Gratis' : 'Free'}</p>
+              <p className="text-2xl font-bold text-gray-400">{guestAttemptsUsed}/{t.attempts}</p>
+            </div>
+          )}
         </div>
         <button onClick={handleEndGame} className="btn-ghost text-sm">
           {t.endGame}
@@ -250,6 +262,30 @@ export function Game() {
                   </span>
                 </div>
               ))}
+          </div>
+        </div>
+      )}
+
+      {/* Guest attempt limit reached - prompt to log in */}
+      {isGuest && guestLimitReached && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <h3 className="text-xl font-bold text-gray-900">
+              {settings.language === 'de' ? 'Gratis-Limit erreicht' : 'Free limit reached'}
+            </h3>
+            <p className="text-gray-600">
+              {settings.language === 'de'
+                ? 'Du hast das kostenlose Limit von 15 Fragen erreicht. Melde dich an, um unbegrenzt weiterzuspielen!'
+                : 'You have reached the free limit of 15 questions. Log in to keep playing unlimited!'}
+            </p>
+            <div className="flex gap-3">
+              <Link to="/login" className="btn-primary flex-1 text-center">
+                {settings.language === 'de' ? 'Anmelden' : 'Log in'}
+              </Link>
+              <button onClick={() => navigate('/')} className="btn-secondary flex-1">
+                {settings.language === 'de' ? 'Zur Startseite' : 'Home'}
+              </button>
+            </div>
           </div>
         </div>
       )}

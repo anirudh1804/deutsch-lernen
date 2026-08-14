@@ -5,7 +5,7 @@ import { LanguageToggle } from './LanguageToggle';
 
 export function Header() {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, isGuest, logout } = useAuth();
   const { settings } = useSettings();
 
   const navLinks = [
@@ -42,7 +42,7 @@ export function Header() {
           <div className="flex items-center space-x-4">
             <LanguageToggle />
             
-            {user ? (
+            {user && !isGuest ? (
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-gray-600 hidden sm:block">
                   {user.username || user.email}
@@ -56,11 +56,13 @@ export function Header() {
               </div>
             ) : (
               <div className="flex items-center space-x-2">
-                <Link to="/login" className="btn-ghost text-sm">
+                {user && (
+                  <span className="text-sm text-gray-500 hidden sm:block">
+                    {settings.language === 'de' ? 'Gast' : 'Guest'}
+                  </span>
+                )}
+                <Link to="/login" className="btn-primary text-sm">
                   {settings.language === 'de' ? 'Anmelden' : 'Login'}
-                </Link>
-                <Link to="/register" className="btn-primary text-sm">
-                  {settings.language === 'de' ? 'Registrieren' : 'Register'}
                 </Link>
               </div>
             )}

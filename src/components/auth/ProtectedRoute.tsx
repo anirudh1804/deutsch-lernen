@@ -1,4 +1,3 @@
-import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 
 interface ProtectedRouteProps {
@@ -6,8 +5,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
-  const location = useLocation();
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -17,9 +15,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
+  // Any visitor (registered or guest) can browse the app.
   return <>{children}</>;
 }

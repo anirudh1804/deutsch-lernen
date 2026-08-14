@@ -12,20 +12,39 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const isAnonymousUser = (u?: { app_metadata?: Record<string, unknown> | null; is_anonymous?: boolean } | null) =>
+  !!u && (u.app_metadata?.is_anonymous === true || u.is_anonymous === true);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
     session: null,
     loading: true,
     error: null,
+    isGuest: false,
   });
 
-  const hydrateUser = useCallback(async (userId: string, email?: string) => {
+  const hydrateUser = useCallback(async (userId: string, email?: string, isGuest = false) => {
+    if (isGuest) {
+      // Guests have no profile row; represent them with a minimal user object.
+      setState(prev => ({
+        ...prev,
+        isGuest: true,
+        user: {
+          id: userId,
+          email: '',
+          preferredLanguage: 'de',
+          isGuest: true,
+        },
+      }));
+      return;
+    }
     const profile = await getOrCreateProfile(userId, { email });
     setState(prev => ({
       ...prev,
+      isGuest: false,
       user: profile
-        ? { ...profile, email: email || profile.email }
+        ? { ...profile, email: email || profile.email, isGuest: false }
         : null,
     }));
   }, []);
@@ -34,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const applySession = useCallback(async (session: {
     access_token: string;
     refresh_token: string;
-    user: { id: string; email?: string };
+    user: { id: string; email?: string; app_metadata?: Record<string, unknown> | null; is_anonymous?: boolean };
   } | null) => {
     setState(prev => ({
       ...prev,
@@ -42,17 +61,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading: false,
     }));
     if (session?.user) {
-      await hydrateUser(session.user.id, session.user.email);
+      const isGuest = isAnonymousUser(session.user);
+      await hydrateUser(session.user.id, session.user.email, isGuest);
     }
   }, [hydrateUser]);
+
+  // Ensure a guest session exists so logged-out visitors can use the app.
+  const ensureGuestSession = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) return;
+    try {
+      await supabase.auth.signInAnonymously();
+    } catch (e) {
+      console.warn('Anonymous sign-in failed (may be disabled on the project):', (e as Error).message);
+    }
+  }, []);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      applySession(session);
+      if (session) {
+        applySession(session);
+      } else {
+        // No session: sign the visitor in as an anonymous guest.
+        ensureGuestSession();
+      }
     });
 
-    // Listen to auth changes (login, logout, token refresh/expiry)
+    // Listen to auth changes (login, logout, token refresh/expiry, anonymous)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         // Always reflect the latest session/token state so the UI never
@@ -60,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await applySession(session);
 
         if (event === 'SIGNED_OUT') {
-          setState({ user: null, session: null, loading: false, error: null });
+          setState({ user: null, session: null, loading: false, error: null, isGuest: false });
         }
       }
     );
@@ -68,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [applySession, hydrateUser]);
+  }, [applySession, hydrateUser, ensureGuestSession]);
 
   const login = useCallback(async ({ identifier, password }: LoginCredentials) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -116,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Revoke the refresh token server-side (not just client-side) so the
     // session truly ends and old tokens can't mint new ones afterwards.
     await supabase.auth.signOut({ scope: 'global' });
-    setState({ user: null, session: null, loading: false, error: null });
+    setState({ user: null, session: null, loading: false, error: null, isGuest: false });
   }, []);
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
@@ -149,13 +185,15 @@ export function useAuth() {
 function mapSession(session: {
   access_token: string;
   refresh_token: string;
-  user: { id: string; email?: string };
+  user: { id: string; email?: string; app_metadata?: Record<string, unknown> | null; is_anonymous?: boolean };
 }): Session {
+  const isGuest = isAnonymousUser(session.user);
   return {
     user: {
       id: session.user.id,
-      email: session.user.email || '',
+      email: isGuest ? '' : session.user.email || '',
       preferredLanguage: 'de',
+      isGuest,
     },
     accessToken: session.access_token,
     refreshToken: session.refresh_token,

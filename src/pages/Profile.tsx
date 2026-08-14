@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 import { useSettings } from '@/features/settings';
 import { getProfileStats, ProfileStats, EMPTY_STATS } from '@/lib/supabase';
 
 export function Profile() {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { settings } = useSettings();
   const [stats, setStats] = useState<ProfileStats>(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
@@ -52,6 +53,8 @@ export function Profile() {
       correct: 'Richtig',
       noHistory: 'Noch keine Spiele gespielt',
       loading: 'Lade Statistiken...',
+      guestSubtitle: 'Du spielst als Gast. Melde dich an, um deine Statistiken und deinen Wortschatz zu sehen.',
+      login: 'Anmelden',
     },
     en: {
       profile: 'Profile',
@@ -74,6 +77,8 @@ export function Profile() {
       correct: 'Correct',
       noHistory: 'No games played yet',
       loading: 'Loading statistics...',
+      guestSubtitle: 'You are playing as a guest. Log in to see your statistics and vocabulary.',
+      login: 'Log in',
     },
   }[settings.language];
 
@@ -91,6 +96,14 @@ export function Profile() {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-600">{t.loading}</p>
+        </div>
+      ) : isGuest ? (
+        <div className="card p-8 text-center space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {settings.language === 'de' ? 'Gast' : 'Guest'}
+          </h2>
+          <p className="text-gray-600">{t.guestSubtitle}</p>
+          <Link to="/login" className="btn-primary inline-block">{t.login}</Link>
         </div>
       ) : (
         <>

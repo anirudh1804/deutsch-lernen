@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
 import { GameState, GameMode, Difficulty, GameQuestion, GameAnswer, GameSettings } from './types';
 import { useAuth } from '@/features/auth';
 import { createGameSession, completeGameSession, saveAnswer } from '@/lib/supabase/games';
 import { getInProgressVocabulary, recordVocabularyAnswer, VocabularyRow } from '@/lib/supabase/vocabulary';
+import { getGuestAttempts, incrementGuestAttempt, isGuestLimitReached, GUEST_ATTEMPT_LIMIT } from '@/lib/supabase/guest';
 import { numberToGermanWords } from '@/utils/numberToGermanWords';
 import { getRandomWord } from '@/data/words';
 
@@ -16,6 +17,8 @@ interface GameContextType extends GameState {
   nextQuestion: () => Promise<void>;
   endGame: () => Promise<void>;
   updateSettings: (settings: Partial<GameSettings>) => void;
+  guestAttemptsUsed: number;
+  guestLimitReached: boolean;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -29,10 +32,11 @@ const DEFAULT_SETTINGS: GameSettings = {
 };
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const questionStartRef = useRef<number>(Date.now());
   const totalResponseRef = useRef<number>(0);
   const inProgressRef = useRef<VocabularyRow[]>([]);
+  const [guestAttemptsUsed, setGuestAttemptsUsed] = useState(0);
   const [state, setState] = useState<GameState>({
     session: null,
     currentQuestion: null,
@@ -42,6 +46,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
     isLoading: false,
     error: null,
   });
+
+  // Load the guest's current attempt count on mount.
+  useEffect(() => {
+    if (isGuest && user) {
+      getGuestAttempts(user.id).then(setGuestAttemptsUsed);
+    } else {
+      setGuestAttemptsUsed(0);
+    }
+  }, [isGuest, user]);
+
+  const guestLimitReached = isGuest && isGuestLimitReached(guestAttemptsUsed);
 
   const refreshInProgress = useCallback(async () => {
     if (!user) return;
@@ -109,6 +124,25 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const { currentQuestion, session, settings } = state;
     if (!currentQuestion || !session) return;
 
+    // Guests are limited to a fixed number of free attempts.
+    if (isGuest && guestLimitReached) {
+      setState(prev => ({ ...prev, error: 'GUEST_LIMIT_REACHED' }));
+      return;
+    }
+
+    // Count this answered question as a guest attempt (server-side, atomic).
+    if (isGuest && user) {
+      const newCount = await incrementGuestAttempt(user.id);
+      if (newCount !== null) {
+        setGuestAttemptsUsed(newCount);
+        // Block only once the limit is actually exceeded (16th+ answer).
+        if (newCount > GUEST_ATTEMPT_LIMIT) {
+          setState(prev => ({ ...prev, error: 'GUEST_LIMIT_REACHED' }));
+          return;
+        }
+      }
+    }
+
     const isCorrect = currentQuestion.type === 'number'
       ? compareNumbers(answer, currentQuestion.value)
       : answer.toLowerCase().trim() === currentQuestion.correctAnswer.toLowerCase().trim();
@@ -172,7 +206,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         correctAnswers: prev.session.correctAnswers + (isCorrect ? 1 : 0),
       } : null,
     }));
-  }, [state, user, refreshInProgress]);
+  }, [state, user, isGuest, guestLimitReached, refreshInProgress]);
 
   const nextQuestion = useCallback(async () => {
     questionStartRef.current = Date.now();
@@ -201,7 +235,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <GameContext.Provider value={{ ...state, startGame, submitAnswer, nextQuestion, endGame, updateSettings }}>
+    <GameContext.Provider value={{ ...state, startGame, submitAnswer, nextQuestion, endGame, updateSettings, guestAttemptsUsed, guestLimitReached }}>
       {children}
     </GameContext.Provider>
   );
