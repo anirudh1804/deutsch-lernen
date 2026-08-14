@@ -1,8 +1,8 @@
 # German Learning App — Architecture Summary
 
 This document captures the overall architecture of the **German Learning App**: a
-single React codebase that compiles into **four platforms** — Web (PWA),
-Desktop (Tauri), and Mobile (Capacitor Android / iOS).
+single React codebase that compiles into **three platforms** — Web (PWA),
+Desktop (Tauri), and Mobile (Capacitor Android).
 
 ---
 
@@ -27,7 +27,7 @@ Desktop (Tauri), and Mobile (Capacitor Android / iOS).
               │                │  │     (Tauri)     │  │   (Capacitor)    │
               │  vercel.json   │  │  src-tauri/     │  │  capacitor.config│
               │  dist/ (hosted)│  │  Rust + WebView2│  │  android/ (A)    │
-              │  sw.js  PWA    │  │  .exe/.msi      │  │  ios/ (macOS)    │
+              │  sw.js  PWA    │  │  .exe/.msi      │  │  android/ (A)    │
               └───────┬────────┘  └────────┬────────┘  └───┬──────────────┘
                       │                    │                │
                       └────────────┬───────┴────────┬───────┘
@@ -86,12 +86,11 @@ forks required.
 - **Commands:** `npm run tauri:dev`, `npm run tauri:build`.
 
 ### 3.3 Mobile — Capacitor
-- **Scaffold:** `capacitor.config.ts` → native `android/` (+ `ios/` on macOS).
+- **Scaffold:** `capacitor.config.ts` → native `android/`.
   - `appId: com.germanlearn.app`, `webDir: dist`, `androidScheme: https`
 - **Sync:** `cap sync` copies `dist/` into `android/app/src/main/assets/public/`.
 - **Commands:** `cap:sync`, `cap:build:android`, `cap:open:android`, `cap:add:android`.
-- **Status:** Android project generated. **APK not built** on this machine (no JDK /
-  Android SDK). iOS requires a Mac (`npx cap add ios`).
+- **Status:** Android project generated and shipping signed `app-release.apk` releases.
 
 ---
 
@@ -142,7 +141,6 @@ defined in `vite.config.mjs`.
 
 - **Android APK** — not produced here (no JDK / Android SDK). Install Android
   Studio + JDK 17, then `npm run cap:build:android`.
-- **iOS** — not scaffolded (needs macOS/Xcode). On a Mac: `npm i @capacitor/ios && npx cap add ios`.
 - **Android WebView TTS** — `speechSynthesis` is not guaranteed on Android. If
   audio must work there, add a native TTS plugin (e.g. `@capacitor-community/text-to-speech`).
 - **Tauri CSP** — `security.csp` is currently `null`; can be tightened once the

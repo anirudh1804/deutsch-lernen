@@ -8,10 +8,10 @@ The same codebase ships as a **web** app (PWA), a **desktop** app (Tauri), and a
 ## Live Links
 
 - **Web app (PWA):** <https://german-learning-app-six.vercel.app>
-- **Desktop installer (Windows):** [GitHub Release v0.2.0](https://github.com/anirudh1804/deutsch-lernen/releases/tag/v0.2.0)
-  - `German.Learning.App_0.2.0_x64-setup.exe` (NSIS installer)
-  - `German.Learning.App_0.2.0_x64_en-US.msi` (MSI installer)
-- **Android APK:** [GitHub Release v0.2.0](https://github.com/anirudh1804/deutsch-lernen/releases/tag/v0.2.0)
+- **Desktop installer (Windows):** [GitHub Release v0.3.0](https://github.com/anirudh1804/deutsch-lernen/releases/tag/v0.3.0)
+  - `German.Learning.App_0.3.0_x64-setup.exe` (NSIS installer)
+  - `German.Learning.App_0.3.0_x64_en-US.msi` (MSI installer)
+- **Android APK:** [GitHub Release v0.3.0](https://github.com/anirudh1804/deutsch-lernen/releases/tag/v0.3.0)
   - `app-release.apk` (signed release APK)
 
 ---
@@ -32,6 +32,9 @@ The same codebase ships as a **web** app (PWA), a **desktop** app (Tauri), and a
   the new build.
 - **User accounts** — register/login with email or username; progress (streaks,
   scores, history) is stored per user.
+- **Guest mode** — anyone can use the app without logging in; guests can answer
+  up to **15 questions** free before being prompted to create an account, and no
+  points are tracked for guests.
 - **Bilingual UI** — German (primary) and English.
 - **PWA** — installable, offline-capable via a service worker.
 
@@ -44,7 +47,6 @@ The same codebase ships as a **web** app (PWA), a **desktop** app (Tauri), and a
 | Web / PWA | ✅ Live | Hosted on Vercel, installable from the browser |
 | Desktop (Windows) | ✅ Live | Tauri builds the web app into a native window; distributed as `.exe`/`.msi` via GitHub Releases |
 | Mobile (Android) | ✅ Live | Capacitor builds the web app into a native APK; distributed as `app-release.apk` via GitHub Releases |
-| Mobile (iOS) | 🔜 Planned | Requires macOS + Xcode |
 
 Because the core is a single React web app, every platform just loads the same
 compiled `dist/` output. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for
@@ -62,7 +64,7 @@ the full stack breakdown.
 | Auth & DB | Supabase (Auth + PostgreSQL) |
 | Audio | Web Speech API (web/desktop) + native TTS (mobile) |
 | Desktop shell | Tauri (Rust + system WebView) |
-| Mobile shell | Capacitor (Android; iOS on macOS) |
+| Mobile shell | Capacitor (Android) |
 | Deployment | Vercel (web) + GitHub Releases (desktop & Android) |
 
 ---
