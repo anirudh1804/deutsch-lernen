@@ -136,10 +136,12 @@ export function Game() {
       {/* Stats Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex items-center space-x-6">
-          <div>
-            <p className="text-sm text-gray-500">{t.score}</p>
-            <p className="text-2xl font-bold text-gray-900">{session.score}</p>
-          </div>
+          {!isGuest && (
+            <div>
+              <p className="text-sm text-gray-500">{t.score}</p>
+              <p className="text-2xl font-bold text-gray-900">{session.score}</p>
+            </div>
+          )}
           <div className="border-l border-gray-200 pl-4">
             <p className="text-sm text-gray-500">{t.streak}</p>
             <p className="text-2xl font-bold text-orange-600">{session.streak}</p>

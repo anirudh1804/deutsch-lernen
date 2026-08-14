@@ -149,7 +149,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const responseTimeMs = Date.now() - questionStartRef.current;
 
     let pointsEarned = 0;
-    if (isCorrect) {
+    if (isCorrect && !isGuest) {
       if (user) {
         const res = await recordVocabularyAnswer({
           userId: user.id,
@@ -165,7 +165,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       } else {
         pointsEarned = FULL_POINTS;
       }
-    } else if (user) {
+    } else if (user && !isGuest) {
       await recordVocabularyAnswer({
         userId: user.id,
         word: currentQuestion.value,
